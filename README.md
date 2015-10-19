@@ -2,7 +2,13 @@ SAIKU
 ---------------
 *WHAT*
 
-Saiku release 3.6 patched with MySQL support instead of builtin h2 and derby.
+Saiku release 3.6 patched with MySQL support instead of builtin:
+ - h2: users and roles
+ - derby: schema configurations
+
+*WHY*
+
+This gives you an ability to create a load balanced or HA solution with saiku server.
 
 *HOW*
 
