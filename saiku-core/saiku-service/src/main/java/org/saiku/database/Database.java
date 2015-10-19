@@ -6,7 +6,11 @@ import org.saiku.service.importer.LegacyImporter;
 import org.saiku.service.importer.LegacyImporterImpl;
 
 import org.apache.commons.io.FileUtils;
-import org.h2.jdbcx.JdbcDataSource;
+//import org.h2.jdbcx.JdbcDataSource;
+import com.mysql.jdbc.Driver;
+import com.mysql.jdbc.Connection;
+import java.sql.DriverManager;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +38,7 @@ public class Database {
     @Autowired
     ServletContext servletContext;
 
-    private JdbcDataSource ds;
+    private Connection c;
     private static final Logger log = LoggerFactory.getLogger(Database.class);
     BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     IDatasourceManager dsm;
@@ -57,22 +61,33 @@ public class Database {
     public void init() throws SQLException {
         initDB();
         loadUsers();
-        loadFoodmart();
-        loadEarthquakes();
+        //loadFoodmart();
+        //loadEarthquakes();
         loadLegacyDatasources();
     }
 
-    private void initDB() {
-        String url = servletContext.getInitParameter("db.url");
-        String user = servletContext.getInitParameter("db.user");
-        String pword = servletContext.getInitParameter("db.password");
-        ds = new JdbcDataSource();
-        ds.setURL(url);
-        ds.setUser(user);
-        ds.setPassword(pword);
+    //private void initDB() {
+    //    String url = servletContext.getInitParameter("db.url");
+    //    String user = servletContext.getInitParameter("db.user");
+    //    String pword = servletContext.getInitParameter("db.password");
+    //    ds = new JdbcDataSource();
+    //    ds.setURL(url);
+    //    ds.setUser(user);
+    //    ds.setPassword(pword);
+    //}
+
+    private void initDB() throws SQLException {
+	Properties mysqlProps = new Properties();
+        mysqlProps.put("user", servletContext.getInitParameter("db.user"));
+        mysqlProps.put("password", servletContext.getInitParameter("db.password"));
+        mysqlProps.put("characterEncoding", "utf-8");
+        mysqlProps.put("useUnicode", "true");
+        java.sql.Driver d = new com.mysql.jdbc.Driver();
+        c = (Connection) DriverManager.getConnection(servletContext.getInitParameter("db.url"), mysqlProps);
     }
 
-    private void loadFoodmart() throws SQLException {
+
+/*    private void loadFoodmart() throws SQLException {
         String url = servletContext.getInitParameter("foodmart.url");
         String user = servletContext.getInitParameter("foodmart.user");
         String pword = servletContext.getInitParameter("foodmart.password");
@@ -82,7 +97,7 @@ public class Database {
             ds2.setUser(user);
             ds2.setPassword(pword);
 
-            Connection c = ds2.getConnection();
+            //Connection c = ds2.getConnection();
             DatabaseMetaData dbm = c.getMetaData();
             ResultSet tables = dbm.getTables(null, null, "account", null);
 
@@ -142,7 +157,7 @@ public class Database {
             ds3.setUser(user);
             ds3.setPassword(pword);
 
-            Connection c = ds3.getConnection();
+            //Connection c = ds3.getConnection();
             DatabaseMetaData dbm = c.getMetaData();
             ResultSet tables = dbm.getTables(null, null, "earthquakes", null);
             String schema = null;
@@ -207,7 +222,7 @@ public class Database {
             }
         }
     }
-
+*/
     private static String readFile(String path, Charset encoding)
             throws IOException
     {
@@ -216,39 +231,60 @@ public class Database {
     }
     private void loadUsers() throws SQLException {
 
-        Connection c = ds.getConnection();
+        //Connection c = ds.getConnection();
 
         Statement statement = c.createStatement();
-        statement.execute("CREATE TABLE IF NOT EXISTS LOG(time TIMESTAMP AS CURRENT_TIMESTAMP NOT NULL, log CLOB);");
+        //statement.execute("CREATE TABLE IF NOT EXISTS LOG(time TIMESTAMP AS CURRENT_TIMESTAMP NOT NULL, log CLOB);");
+	statement.execute("CREATE TABLE IF NOT EXISTS log(time TIMESTAMP DEFAULT CURRENT_TIMESTAMP, log BLOB);");
 
-        statement.execute("CREATE TABLE IF NOT EXISTS USERS(user_id INT(11) NOT NULL AUTO_INCREMENT, " +
-                "username VARCHAR(45) NOT NULL UNIQUE, password VARCHAR(100) NOT NULL, email VARCHAR(100), " +
-                "enabled TINYINT NOT NULL DEFAULT 1, PRIMARY KEY(user_id));");
+        //statement.execute("CREATE TABLE IF NOT EXISTS USERS(user_id INT(11) NOT NULL AUTO_INCREMENT, " +
+        //        "username VARCHAR(45) NOT NULL UNIQUE, password VARCHAR(100) NOT NULL, email VARCHAR(100), " +
+        //        "enabled TINYINT NOT NULL DEFAULT 1, PRIMARY KEY(user_id));");
 
-        statement.execute("CREATE TABLE IF NOT EXISTS USER_ROLES (\n"
+	statement.execute("CREATE TABLE IF NOT EXISTS users(user_id INT(11) NOT NULL AUTO_INCREMENT, " +
+                "username VARCHAR(45) NOT NULL, password VARCHAR(100) NOT NULL, email VARCHAR(100)," +
+                "enabled TINYINT NOT NULL DEFAULT 1, PRIMARY KEY(user_id), UNIQUE(username));");
+
+        //statement.execute("CREATE TABLE IF NOT EXISTS USER_ROLES (\n"
+        //        + "  user_role_id INT(11) NOT NULL AUTO_INCREMENT,username VARCHAR(45),\n"
+        //        + "  user_id INT(11) NOT NULL REFERENCES USERS(user_id),\n"
+        //        + "  ROLE VARCHAR(45) NOT NULL,\n"
+        //        + "  PRIMARY KEY (user_role_id));");
+        statement.execute("CREATE TABLE IF NOT EXISTS user_roles (\n"
                 + "  user_role_id INT(11) NOT NULL AUTO_INCREMENT,username VARCHAR(45),\n"
-                + "  user_id INT(11) NOT NULL REFERENCES USERS(user_id),\n"
-                + "  ROLE VARCHAR(45) NOT NULL,\n"
-                + "  PRIMARY KEY (user_role_id));");
+                + "  user_id INT(11) NOT NULL,\n"
+                + "  role VARCHAR(45) NOT NULL,\n"
+                + "  PRIMARY KEY (user_role_id),\n"
+                + "  FOREIGN KEY (user_id) REFERENCES users(user_id));");
 
-        ResultSet result = statement.executeQuery("select count(*) as c from LOG where log = 'insert users'");
+        //ResultSet result = statement.executeQuery("select count(*) as c from LOG where log = 'insert users'");
+	ResultSet result = statement.executeQuery("select count(*) as c from log where log = 'insert users'");
+
         result.next();
         if (result.getInt("c") == 0) {
+            //dsm.createUser("admin");
+            //dsm.createUser("smith");
+            //statement.execute("INSERT INTO users(username,password,email, enabled)\n"
+            //        + "VALUES ('admin','admin', 'test@admin.com',TRUE);" +
+            //        "INSERT INTO users(username,password,enabled)\n"
+            //        + "VALUES ('smith','smith', TRUE);");
+            //statement.execute(
+            //        "INSERT INTO user_roles (user_id, username, ROLE)\n"
+            //                + "VALUES (1, 'admin', 'ROLE_USER');" +
+            //                "INSERT INTO user_roles (user_id, username, ROLE)\n"
+            //                + "VALUES (1, 'admin', 'ROLE_ADMIN');" +
+            //               "INSERT INTO user_roles (user_id, username, ROLE)\n"
+            //                + "VALUES (2, 'smith', 'ROLE_USER');");
+
+            //statement.execute("INSERT INTO LOG(log) VALUES('insert users');");
             dsm.createUser("admin");
             dsm.createUser("smith");
-            statement.execute("INSERT INTO users(username,password,email, enabled)\n"
-                    + "VALUES ('admin','admin', 'test@admin.com',TRUE);" +
-                    "INSERT INTO users(username,password,enabled)\n"
-                    + "VALUES ('smith','smith', TRUE);");
-            statement.execute(
-                    "INSERT INTO user_roles (user_id, username, ROLE)\n"
-                            + "VALUES (1, 'admin', 'ROLE_USER');" +
-                            "INSERT INTO user_roles (user_id, username, ROLE)\n"
-                            + "VALUES (1, 'admin', 'ROLE_ADMIN');" +
-                            "INSERT INTO user_roles (user_id, username, ROLE)\n"
-                            + "VALUES (2, 'smith', 'ROLE_USER');");
-
-            statement.execute("INSERT INTO LOG(log) VALUES('insert users');");
+            statement.execute("INSERT INTO users(username,password,email, enabled) VALUES ('admin','admin', 'test@admin.com',TRUE);");
+	    statement.execute("INSERT INTO users(username,password,enabled) VALUES ('smith','smith', TRUE);");
+            statement.execute("INSERT INTO user_roles (user_id, username, ROLE) VALUES (1, 'admin', 'ROLE_USER');");
+            statement.execute("INSERT INTO user_roles (user_id, username, ROLE) VALUES (1, 'admin', 'ROLE_ADMIN');");
+            statement.execute("INSERT INTO user_roles (user_id, username, ROLE) VALUES (2, 'smith', 'ROLE_USER');");
+            statement.execute("INSERT INTO log(log) VALUES('insert users');");
         }
 
         String encrypt = servletContext.getInitParameter("db.encryptpassword");
@@ -262,18 +298,20 @@ public class Database {
     }
 
     public boolean checkUpdatedEncyption() throws SQLException{
-        Connection c = ds.getConnection();
+        //Connection c = ds.getConnection();
 
         Statement statement = c.createStatement();
-        ResultSet result = statement.executeQuery("select count(*) as c from LOG where log = 'update passwords'");
+        //ResultSet result = statement.executeQuery("select count(*) as c from LOG where log = 'update passwords'");
+	ResultSet result = statement.executeQuery("select count(*) as c from log where log = 'update passwords'");
         result.next();
         return result.getInt("c") != 0;
     }
     public void updateForEncyption() throws SQLException {
-        Connection c = ds.getConnection();
+        //Connection c = ds.getConnection();
 
         Statement statement = c.createStatement();
-        statement.execute("ALTER TABLE users ALTER COLUMN password VARCHAR(100) DEFAULT NULL");
+        //statement.execute("ALTER TABLE users ALTER COLUMN password VARCHAR(100) DEFAULT NULL");
+	statement.execute("ALTER TABLE users MODIFY COLUMN password VARCHAR(100) DEFAULT NULL");
 
         ResultSet result = statement.executeQuery("select username, password from users");
 
@@ -288,23 +326,25 @@ public class Database {
         }
         statement = c.createStatement();
 
-        statement.execute("INSERT INTO LOG(log) VALUES('update passwords');");
+        //statement.execute("INSERT INTO LOG(log) VALUES('update passwords');");
+	statement.execute("INSERT INTO log(log) VALUES('update passwords');");
 
     }
 
     public void loadLegacyDatasources() throws SQLException {
-        Connection c = ds.getConnection();
+        //Connection c = ds.getConnection();
 
         Statement statement = c.createStatement();
-        ResultSet result = statement.executeQuery("select count(*) as c from LOG where log = 'insert datasources'");
+        //ResultSet result = statement.executeQuery("select count(*) as c from LOG where log = 'insert datasources'");
+	ResultSet result = statement.executeQuery("select count(*) as c from log where log = 'insert datasources'");
 
         result.next();
         if (result.getInt("c") == 0) {
             LegacyImporter l = new LegacyImporterImpl(dsm);
             l.importSchema();
             l.importDatasources();
-            statement.execute("INSERT INTO LOG(log) VALUES('insert datasources');");
-
+            //statement.execute("INSERT INTO LOG(log) VALUES('insert datasources');");
+	    statement.execute("INSERT INTO log(log) VALUES('insert datasources');");
         }
     }
 

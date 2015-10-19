@@ -14,7 +14,8 @@ import java.util.Set;
  * Created by bugg on 01/05/14.
  */
 @Entity
-@Table(name="USER_ROLES")
+//@Table(name="USER_ROLES")
+@Table(name="user_roles")
 public class Role {
 
   @Id
@@ -24,10 +25,15 @@ public class Role {
   private String role;
 
   @OneToMany(cascade= CascadeType.ALL)
-  @JoinTable(name="USER_ROLES",
-    joinColumns = {@JoinColumn(name="USER_ROLE_ID", referencedColumnName="id")},
-    inverseJoinColumns = {@JoinColumn(name="USER_ID", referencedColumnName="id")}
+//  @JoinTable(name="USER_ROLES",
+//    joinColumns = {@JoinColumn(name="USER_ROLE_ID", referencedColumnName="id")},
+//    inverseJoinColumns = {@JoinColumn(name="USER_ID", referencedColumnName="id")}
+//  )
+  @JoinTable(name="user_roles",
+    joinColumns = {@JoinColumn(name="user_role_id", referencedColumnName="id")},
+    inverseJoinColumns = {@JoinColumn(name="user_id", referencedColumnName="id")}
   )
+
   private Set<User> userRoles;
 
   public Integer getId() {

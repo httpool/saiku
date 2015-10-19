@@ -34,21 +34,28 @@
             </value>
         </property>
         <property name="usersByUsernameQuery">
-            <value>
-                <![CDATA[select u.username,u.password, u.enabled from users u inner join (
-select MAX(USERS.USER_ID) ID, USERS.USERNAME from USERS group by USERS.USERNAME) tm on u.USER_ID = tm.ID where u.username = ?
-GROUP BY u.USER_ID]]>
-            </value>
+            <!--value>
+                <![CDATA[select u.username,u.password, u.enabled from users u inner join (select MAX(USERS.USER_ID) ID, USERS.USERNAME from USERS group by USERS.USERNAME) tm on u.USER_ID = tm.ID where u.username = ? GROUP BY u.USER_ID]]>
+            </value-->
+	    <value>
+		<![CDATA[select u.username,u.password, u.enabled from users u inner join (select MAX(users.user_id) ID, users.username from users group by users.username) tm on u.user_id = tm.id where u.username = ? GROUP BY u.user_id]]>
+	    </value>
         </property>
     </bean>
-    <bean id="dataSource"
-          class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+    <!--bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
         <property name="driverClassName" value="org.h2.Driver" />
-        <property name="url"
-                  value="jdbc:h2:../../data/saiku;MODE=MySQL"/>
+        <property name="url" value="jdbc:h2:../../data/saiku;MODE=MySQL"/>
         <property name="username" value="sa" />
         <property name="password" value="" />
-    </bean>
+    </bean-->
+
+     <bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+        <property name="driverClassName" value="com.mysql.jdbc.Driver" />
+        <property name="url" value="jdbc:mysql://mysql-server/saiku_db"/>
+        <property name="username" value="saiku" />
+        <property name="password" value="saiku" />
+     </bean>
+
 
     <bean id="passwordEncoder"
           class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder" />

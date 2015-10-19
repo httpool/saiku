@@ -266,6 +266,7 @@
   <classpathentry kind="var" path="M2_REPO/com/healthmarketscience/jackcess/jackcess/1.2.4/jackcess-1.2.4.jar"/>
   <classpathentry kind="var" path="M2_REPO/postgresql/postgresql/9.1-902.jdbc4/postgresql-9.1-902.jdbc4.jar"/>
   <classpathentry kind="var" path="M2_REPO/com/h2database/h2/1.2.131/h2-1.2.131.jar"/>
+  <classpathentry kind="var" path="M2_REPO/mysql/jars/mysql-connector-java-5.1.36-bin.jar"/>
   <classpathentry kind="var" path="M2_REPO/infobright/infobright-core/3.4/infobright-core-3.4.jar"/>
   <classpathentry kind="var" path="M2_REPO/jtds/jtds/1.2.5/jtds-1.2.5.jar"/>
   <classpathentry kind="var" path="M2_REPO/net/sf/jt400/jt400/6.1/jt400-6.1.jar"/>
