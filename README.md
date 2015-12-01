@@ -23,6 +23,6 @@ Update mysql configuration in files:
 
 mvn3 clean install -DskipTests
 
-* AFTER BUILD
+*AFTER BUILD*
 
 You need to manualy add commons-math-2.0.jar to "saiku/WEB-INF/lib"
